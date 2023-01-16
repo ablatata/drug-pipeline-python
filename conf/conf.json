@@ -1,0 +1,26 @@
+{"input_path" : "data/", 
+ "links_path" : "links/", 
+ "links_name": "links.json",
+ "features_path": "features_result", 
+ "features_name": "journal_max_count",
+ 
+ "drugs": {"format": "csv",
+           "file_name":"drugs.csv",
+           "delimiteur": ","
+                 },
+ 
+ "data_mention": {
+        "pubmed": [
+            {"format":"csv", 
+             "file_name" :"pubmed.csv", 
+             "delimiteur": ","}, 
+            {"format": "json", 
+             "file_name": "pubmed.json",
+            "delimiteur": ""}
+        ],
+        "clinical_trials": [
+            {"format": "csv", 
+             "file_name":"clinical_trials.csv", 
+             "delimiteur": ","}]
+    }
+}

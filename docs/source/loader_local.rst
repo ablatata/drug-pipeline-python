@@ -1,0 +1,15 @@
+loader_local
+============
+
+ 
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+	
+	
+
+.. automodule:: drugs_link_graph.loaders.loader_local
+    :members:	
+	

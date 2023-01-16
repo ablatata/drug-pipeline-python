@@ -1,0 +1,199 @@
+
+<!DOCTYPE html>
+
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>drugs_link_graph.data_pipeline.links_graph_pipeline &#8212; Documentation drugs_data_pipeline 0.1</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/translations.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Recherche" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Code source de drugs_link_graph.data_pipeline.links_graph_pipeline</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">======</span>
+<span class="sd">    python LinksGraph.py </span>
+<span class="sd">    </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__authors__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Abla&quot;</span><span class="p">)</span>
+<span class="n">__contact__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;abla.takkag10@gmail.com&quot;</span><span class="p">)</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;MIT&quot;</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s2">&quot;2022-12-05&quot;</span>
+<span class="n">__version__</span><span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">logging</span><span class="o">,</span> <span class="nn">warnings</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;../..&#39;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">R</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">R</span><span class="p">)</span>
+    
+
+<span class="kn">from</span> <span class="nn">drugs_link_graph.connectors.connector_local</span> <span class="kn">import</span> <span class="n">ConnectorLocal</span>
+<span class="kn">from</span> <span class="nn">drugs_link_graph.loaders.loader_local</span> <span class="kn">import</span> <span class="n">LoaderLocal</span>
+<span class="kn">from</span> <span class="nn">drugs_link_graph.data_cleaning.cleaner</span> <span class="kn">import</span> <span class="n">Cleaner</span>
+<span class="kn">from</span> <span class="nn">drugs_link_graph.tools.utils</span> <span class="kn">import</span> <span class="n">reader</span><span class="p">,</span> <span class="n">concat_data</span>
+<span class="kn">from</span> <span class="nn">drugs_link_graph.data_modeling.links_graph_modeler</span> <span class="kn">import</span> <span class="n">compute_drug_links</span>
+<span class="kn">from</span> <span class="nn">drugs_link_graph.config.config</span> <span class="kn">import</span> <span class="n">load_conf_file</span><span class="p">,</span> <span class="n">configure_logging</span>
+<span class="kn">import</span> <span class="nn">drugs_link_graph.tools.constants</span> <span class="k">as</span> <span class="nn">cst</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+    
+<div class="viewcode-block" id="LinksGraphPipeline"><a class="viewcode-back" href="../../../data_pipeline.html#drugs_link_graph.data_pipeline.links_graph_pipeline.LinksGraphPipeline">[docs]</a><span class="k">class</span> <span class="nc">LinksGraphPipeline</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;cette classe permet de construire le pipeline pour calculer les liens entre les drugs d&#39;un côté et leurs </span>
+<span class="sd">      mentions dans les PubMed, les journaux et clinical_trials</span>
+<span class="sd">      </span>
+<span class="sd">       Parameters</span>
+<span class="sd">       ----------</span>
+<span class="sd">        conf_path: str</span>
+<span class="sd">                   chemin d&#39;accès vers le fichier de config.</span>
+<span class="sd">        conf_name: str</span>
+<span class="sd">                   nom de fichier de config.</span>
+<span class="sd">       </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conf_path</span><span class="p">,</span> <span class="n">conf_name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conf_path</span> <span class="o">=</span> <span class="n">conf_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conf_name</span> <span class="o">=</span> <span class="n">conf_name</span> 
+        <span class="k">return</span>
+        
+
+
+    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">)</span> <span class="p">:</span> 
+        
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;=========&gt; Getting input data...&quot;</span><span class="p">)</span>
+        
+        <span class="c1">#Lire la config</span>
+        <span class="n">conf</span> <span class="o">=</span> <span class="n">load_conf_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf_name</span><span class="p">)</span>
+        
+        <span class="c1"># Lire le dataframe des drugs</span>
+        <span class="n">connector</span> <span class="o">=</span> <span class="n">ConnectorLocal</span><span class="p">(</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;input_path&#39;</span><span class="p">])</span>
+        <span class="n">drugs_input_name</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;drugs&#39;</span><span class="p">]</span>
+        <span class="n">drugs</span> <span class="o">=</span> <span class="n">reader</span><span class="p">(</span><span class="n">drugs_input_name</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">],</span> <span class="n">drugs_input_name</span><span class="p">[</span><span class="s2">&quot;format&quot;</span><span class="p">],</span> <span class="n">drugs_input_name</span><span class="p">[</span><span class="s2">&quot;delimiteur&quot;</span><span class="p">],</span> <span class="n">connector</span><span class="p">)</span>   
+        
+        <span class="c1"># Lire et concatener les donnees de liens (pubmed &amp; clinicals trials)</span>
+        <span class="n">datalinks</span> <span class="o">=</span> <span class="n">concat_data</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">connector</span><span class="p">)</span> 
+        
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;=========&gt; preprocessing &amp; cleaning data...&quot;</span><span class="p">)</span>
+        <span class="c1"># Nettoyer les données de liens</span>
+        <span class="n">clean</span> <span class="o">=</span> <span class="n">Cleaner</span><span class="p">(</span><span class="n">datalinks</span><span class="p">)</span>
+        <span class="c1"># Nettoyer et uniformiser la colonne date </span>
+        <span class="n">cleaned_date</span> <span class="o">=</span> <span class="n">clean</span><span class="o">.</span><span class="n">clean_date_column</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">)</span>
+        <span class="c1"># Nettoyer la colonne title</span>
+        <span class="n">cleaned_title</span> <span class="o">=</span> <span class="n">clean</span><span class="o">.</span><span class="n">clean_words_column</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">)</span>
+        <span class="c1"># Nettoyer la colonne journal </span>
+        <span class="n">cleaned_journal</span> <span class="o">=</span> <span class="n">clean</span><span class="o">.</span><span class="n">clean_words_column</span><span class="p">(</span><span class="s1">&#39;journal&#39;</span><span class="p">)</span>
+        <span class="c1"># Supprimer les nulls</span>
+        <span class="n">cleaned_datalinks</span> <span class="o">=</span> <span class="n">clean</span><span class="o">.</span><span class="n">deal_with_nan</span><span class="p">()</span>
+        
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;=========&gt; links graph modeler...&quot;</span><span class="p">)</span>
+        <span class="c1"># Calculer les liens entre les drugs et les donnees</span>
+        <span class="n">links</span> <span class="o">=</span> <span class="n">compute_drug_links</span><span class="p">(</span><span class="n">drugs</span><span class="p">,</span> <span class="n">cleaned_datalinks</span><span class="p">)</span>
+        
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;=========&gt; save result ...&quot;</span><span class="p">)</span>
+        <span class="c1"># Enregitrer les resultats </span>
+        <span class="n">loader</span> <span class="o">=</span> <span class="n">LoaderLocal</span><span class="p">(</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;links_path&#39;</span><span class="p">])</span>
+        <span class="n">loader</span><span class="o">.</span><span class="n">write_json_file</span><span class="p">(</span><span class="n">links</span><span class="p">,</span> <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;links_name&#39;</span><span class="p">])</span>
+        
+        <span class="k">return</span> <span class="kc">True</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">drugs_data_pipeline</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../data_modeling.html">data_modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../data_pipeline.html">data_pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../loader_local.html">loader_local</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Code du module</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Recherche rapide</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, TAKKA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
